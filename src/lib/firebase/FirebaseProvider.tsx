@@ -58,6 +58,7 @@ const FirebaseContext = createContext<FirebaseContextType | undefined>(
 );
 
 // Custom hook to easily access the Firebase context.
+// Custom hook to easily access the Firebase context.
 export const useFirebase = (): FirebaseContextType => {
   const context = useContext(FirebaseContext);
   if (context === undefined) {
@@ -79,7 +80,9 @@ export const FirebaseProvider = ({
   const [auth, setAuth] = useState<Auth | null>(null);
   const [db, setDb] = useState<Firestore | null>(null);
   // State for user and authentication status
+  // State for user and authentication status
   const [user, setUser] = useState<User | null>(null);
+  const [userId, setUserId] = useState<string | null>(null); // Can be Firebase UID or a fallback
   const [userId, setUserId] = useState<string | null>(null); // Can be Firebase UID or a fallback
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -207,11 +210,13 @@ export const FirebaseProvider = ({
         </p>
         <pre className="text-xs bg-destructive/20 p-2 rounded-md overflow-auto max-w-md">
           Error: {error.message}
+          Error: {error.message}
         </pre>
       </div>
     );
   }
 
+  // Provide the Firebase context to children components.
   // Provide the Firebase context to children components.
   return (
     <FirebaseContext.Provider
