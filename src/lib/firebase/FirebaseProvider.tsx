@@ -21,7 +21,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import { APP_ID, INITIAL_AUTH_TOKEN } from "@/constants";
+import { APP_ID, INITIAL_AUTH_TOKEN } from "@/constants"; // APP_ID and INITIAL_AUTH_TOKEN from your constants
 import { GlobeLock } from "lucide-react"; // For loading state
 
 // Firebase configuration:
@@ -30,15 +30,16 @@ import { GlobeLock } from "lucide-react"; // For loading state
 // This provider will try to use that global configuration first.
 // If `__firebase_config` is not found (e.g., in local development outside Studio),
 // it falls back to environment variables (NEXT_PUBLIC_FIREBASE_*).
+// It's crucial that for production, the configuration is securely provided by the environment.
 // We have REMOVED hardcoded placeholder values to ensure that configuration MUST come
 // from environment variables or the injected global config for security and correctness.
 const firebaseConfig = (globalThis as any).__firebase_config || {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY, // NO FALLBACK TO "your-api-key"
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, // NO FALLBACK
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, // NO FALLBACK
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, // NO FALLBACK
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, // NO FALLBACK
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID, // NO FALLBACK
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
 interface FirebaseContextType {
@@ -57,7 +58,6 @@ const FirebaseContext = createContext<FirebaseContextType | undefined>(
   undefined
 );
 
-// Custom hook to easily access the Firebase context.
 // Custom hook to easily access the Firebase context.
 export const useFirebase = (): FirebaseContextType => {
   const context = useContext(FirebaseContext);
@@ -80,9 +80,7 @@ export const FirebaseProvider = ({
   const [auth, setAuth] = useState<Auth | null>(null);
   const [db, setDb] = useState<Firestore | null>(null);
   // State for user and authentication status
-  // State for user and authentication status
   const [user, setUser] = useState<User | null>(null);
-  const [userId, setUserId] = useState<string | null>(null); // Can be Firebase UID or a fallback
   const [userId, setUserId] = useState<string | null>(null); // Can be Firebase UID or a fallback
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -132,6 +130,9 @@ export const FirebaseProvider = ({
           } else {
             // No user is signed in. Attempt to sign in based on INITIAL_AUTH_TOKEN or anonymously.
             try {
+              // IMPORTANT: If INITIAL_AUTH_TOKEN is used, it MUST be a custom token generated
+              // by a Firebase Admin SDK (e.g., in a Cloud Function). If you are not using
+              // custom tokens, ensure INITIAL_AUTH_TOKEN is null or undefined in your constants.
               if (INITIAL_AUTH_TOKEN) {
                 // If an initial auth token is provided (e.g., for specific integrations), use it.
                 const userCredential = await signInWithCustomToken(
@@ -143,6 +144,8 @@ export const FirebaseProvider = ({
               } else {
                 // Otherwise, sign in anonymously. This allows users to use the app without an account.
                 // Data will be tied to this anonymous user's UID.
+                // IMPORTANT: Anonymous Authentication MUST be enabled in your Firebase project settings
+                // (Firebase Console -> Authentication -> Sign-in method -> Anonymous).
                 const userCredential = await signInAnonymously(authInstance);
                 setUser(userCredential.user);
                 setUserId(userCredential.user.uid); // Firebase anonymous auth provides a stable UID.
@@ -177,7 +180,7 @@ export const FirebaseProvider = ({
       // Cleanup: Unsubscribe from the auth state listener when the component unmounts.
       return () => unsubscribe();
     } catch (e: any) {
-      // Catch errors during Firebase initialization itself (e.g., missing API key)
+      // Catch errors during Firebase initialization itself (e.g., missing API key, invalid config)
       console.error("Firebase Initialization Error:", e);
       setError(e);
       setLoading(false);
@@ -210,13 +213,11 @@ export const FirebaseProvider = ({
         </p>
         <pre className="text-xs bg-destructive/20 p-2 rounded-md overflow-auto max-w-md">
           Error: {error.message}
-          Error: {error.message}
         </pre>
       </div>
     );
   }
 
-  // Provide the Firebase context to children components.
   // Provide the Firebase context to children components.
   return (
     <FirebaseContext.Provider
