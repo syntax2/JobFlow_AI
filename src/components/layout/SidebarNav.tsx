@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -26,9 +27,14 @@ import {
   LogOut,
   Briefcase,
   UserCircle,
+  Sun,
+  Moon,
+  Laptop,
 } from 'lucide-react';
 import { useFirebase } from '@/lib/firebase/FirebaseProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useTheme } from '@/context/ThemeProvider'; // Import useTheme
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'; // For theme toggle
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,18 +42,17 @@ const navItems = [
   { href: '/keyword-matcher', label: 'Keyword Matcher', icon: Lightbulb },
   { href: '/cover-letters', label: 'Cover Letters', icon: ClipboardSignature },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  // { href: '/jobs/new', label: 'Add Job', icon: Briefcase }, // Example if adding a dedicated page
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
   const { user, userId, auth } = useFirebase();
+  const { theme, setTheme, resolvedTheme } = useTheme(); // Use theme context
 
   const handleSignOut = async () => {
     if (auth) {
       try {
         await auth.signOut();
-        // Potentially redirect or let FirebaseProvider handle anonymous sign-in
       } catch (error) {
         console.error("Error signing out: ", error);
       }
@@ -63,6 +68,33 @@ export function SidebarNav() {
     return name.substring(0, 2);
   };
 
+  const ThemeToggleButton = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:aspect-square group-data-[collapsible=icon]:p-0">
+          {resolvedTheme === 'dark' ? <Moon className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" /> : <Sun className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />}
+          <span className="group-data-[collapsible=icon]:hidden">
+            {theme.charAt(0).toUpperCase() + theme.slice(1)} Mode
+          </span>
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem onClick={() => setTheme('light')}>
+          <Sun className="mr-2 h-4 w-4" />
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('dark')}>
+          <Moon className="mr-2 h-4 w-4" />
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme('system')}>
+          <Laptop className="mr-2 h-4 w-4" />
+          System
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -115,18 +147,8 @@ export function SidebarNav() {
         </SidebarContent>
       </ScrollArea>
       <Separator className="group-data-[collapsible=icon]:hidden"/>
-      <SidebarFooter className="p-2 group-data-[collapsible=icon]:py-2">
-        {/* <SidebarMenu>
-          <SidebarMenuItem>
-             <Link href="/settings" passHref legacyBehavior>
-                <SidebarMenuButton variant="ghost" className="justify-start" tooltip={{children: "Settings"}}>
-                  <Settings className="h-5 w-5" />
-                  <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                </SidebarMenuButton>
-            </Link>
-          </SidebarMenuItem>
-        </SidebarMenu> */}
-        {/* If sign out is needed for non-anonymous users */}
+      <SidebarFooter className="p-2 group-data-[collapsible=icon]:py-2 space-y-1">
+        <ThemeToggleButton />
         {auth && user && !user.isAnonymous && (
            <Button variant="ghost" className="w-full justify-start group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:aspect-square group-data-[collapsible=icon]:p-0" onClick={handleSignOut}>
             <LogOut className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
