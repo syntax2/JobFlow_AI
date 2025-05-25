@@ -47,7 +47,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
 
     setLoadingResumes(true);
     const resumesColPath = `artifacts/${appId}/users/${userId}/resumes`;
-    const q = query(collection(db, resumesColPath)/*, orderBy('lastUpdated', 'desc')*/); // No orderBy as per instructions
+    const q = query(collection(db, resumesColPath)/*, orderBy('lastUpdated', 'desc')*/); 
 
     const unsubscribe = onSnapshot(
       q,
@@ -56,18 +56,15 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
         querySnapshot.forEach((doc) => {
           fetchedResumes.push({ id: doc.id, ...doc.data() } as Resume);
         });
-        // Sort in memory
+        
         fetchedResumes.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
         setResumes(fetchedResumes);
         
-        // If a resume was selected, ensure it's still up-to-date
         if (selectedResume) {
           const updatedSelected = fetchedResumes.find(r => r.id === selectedResume.id);
           setSelectedResume(updatedSelected || null);
         } else if (fetchedResumes.length > 0 && !selectedResume) {
-          // Auto-select first resume if none is selected
-          // Only select if it's not a builder resume or if we enhance selection logic later
-           if (!fetchedResumes[0].templateId) { // Prioritize non-builder resumes for default selection in text editor
+           if (!fetchedResumes[0].templateId) { 
             setSelectedResume(fetchedResumes[0]);
            }
         }
@@ -81,16 +78,16 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => unsubscribe();
-  }, [db, userId, appId, toast, selectedResume]);
+  }, [db, userId, appId, toast, selectedResume]); // selectedResume removed from dep array to avoid potential loops if it causes re-fetches itself.
 
   const setSelectedResumeId = useCallback((id: string | null) => {
     if (id === null) {
       setSelectedResume(null);
     } else {
-      const resume = resumes.find(r => r.id === id);
+      const resume = resumes.find(r => r.id === id); // resumes from state
       setSelectedResume(resume || null);
     }
-  }, [resumes]);
+  }, [resumes]); // Depends on the current list of resumes
 
   const addResume = async (resumeData: Omit<Resume, 'id' | 'lastUpdated' | 'userId'>): Promise<string | null> => {
     if (!db || !userId || !appId) {
@@ -100,15 +97,14 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     try {
       const resumesColPath = `artifacts/${appId}/users/${userId}/resumes`;
       
-      // Ensure content is an empty string if not provided, especially for builder resumes
       const dataToSave: Omit<Resume, 'id'> = {
         name: resumeData.name,
-        content: resumeData.content || '', // Ensure content is at least an empty string
+        content: resumeData.content || '', 
         userId,
         lastUpdated: Timestamp.now().toDate().toISOString(),
-        summary: resumeData.summary, // Keep existing summary if provided
+        summary: resumeData.summary, 
         templateId: resumeData.templateId,
-        structuredData: resumeData.structuredData,
+        structuredData: resumeData.structuredData || { personalInfo: { photoUrl: resumeData.structuredData?.personalInfo?.photoUrl || '' } }, // ensure photoUrl path
       };
 
       const newResumeRef = await addDoc(collection(db, resumesColPath), dataToSave);
@@ -129,13 +125,18 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     try {
       const resumeDocPath = `artifacts/${appId}/users/${userId}/resumes/${id}`;
       
-      const dataToUpdate = {
+      const dataToUpdate: any = { // Use any for flexibility with partial updates
         ...resumeData,
         lastUpdated: Timestamp.now().toDate().toISOString(),
       };
-      // If content is explicitly set to null or undefined by partial update, ensure it's handled
-      // or make sure that updates to structuredData also clear/update content appropriately.
-      // For now, we assume resumeData will provide what's needed.
+
+      // Ensure structuredData and personalInfo exist if photoUrl is being updated
+      if (resumeData.structuredData?.personalInfo?.photoUrl !== undefined) {
+        if (!dataToUpdate.structuredData) dataToUpdate.structuredData = {};
+        if (!dataToUpdate.structuredData.personalInfo) dataToUpdate.structuredData.personalInfo = {};
+        dataToUpdate.structuredData.personalInfo.photoUrl = resumeData.structuredData.personalInfo.photoUrl;
+      }
+
 
       await updateDoc(doc(db, resumeDocPath), dataToUpdate);
       toast({ title: "Success", description: "Resume updated successfully." });
@@ -155,7 +156,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       await deleteDoc(doc(db, resumeDocPath));
       toast({ title: "Success", description: "Resume deleted successfully." });
       if (selectedResume?.id === id) {
-        setSelectedResume(null); // Clear selection if deleted resume was selected
+        setSelectedResume(null); 
       }
     } catch (error) {
       console.error("Error deleting resume:", error);
@@ -185,7 +186,8 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
       } else {
         throw new Error("AI did not return a summary.");
       }
-    } catch (error) {
+    } catch (error)
+      {
       console.error("Error summarizing resume:", error);
       toast({ title: "AI Error", description: `Could not summarize resume. ${error instanceof Error ? error.message : ''}`, variant: "destructive" });
     }

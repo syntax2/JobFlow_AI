@@ -28,7 +28,7 @@ export interface PersonalInfo {
   linkedin?: string;
   portfolio?: string;
   address?: string;
-  photoUrl?: string; // URL to an uploaded image
+  photoUrl?: string; // Data URI for client-side preview, or URL if stored
 }
 
 export interface WorkExperienceEntry {
@@ -36,8 +36,8 @@ export interface WorkExperienceEntry {
   jobTitle?: string;
   company?: string;
   location?: string;
-  startDate?: string; // ISO string or "Present"
-  endDate?: string;   // ISO string
+  startDate?: string; // e.g., "MM/YYYY" or "Present"
+  endDate?: string;   // e.g., "MM/YYYY"
   description?: string; // Markdown or plain text bullet points
 }
 
@@ -46,7 +46,7 @@ export interface EducationEntry {
   degree?: string;
   institution?: string;
   location?: string;
-  graduationYear?: string; // Or start/end dates
+  graduationYear?: string; // e.g., "YYYY" or "MM/YYYY - MM/YYYY"
   description?: string; // GPA, honors, relevant coursework
 }
 
@@ -72,6 +72,13 @@ export interface ResumeData {
 }
 
 export type ResumeTemplateId = 'modern' | 'classic' | 'ivy-league';
+
+// Structure for JSON export/import
+export interface ResumeJsonExport {
+  resumeName: string;
+  templateId: ResumeTemplateId;
+  structuredData: ResumeData;
+}
 
 export interface Resume {
   id: string;
@@ -146,3 +153,4 @@ export interface KeywordExtractionResult {
   technologies: string[];
   responsibilities: string[];
 }
+
