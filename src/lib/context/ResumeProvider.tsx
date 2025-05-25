@@ -1,7 +1,8 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
-import type { Resume } from './types';
+import type { Resume, ResumeData, ResumeTemplateId } from './types';
 import { useFirebase } from '../firebase/FirebaseProvider';
 import { collection, onSnapshot, orderBy, query, where, Timestamp, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { APP_ID } from '@/constants';
@@ -12,7 +13,7 @@ interface ResumeContextType {
   resumes: Resume[];
   selectedResume: Resume | null;
   setSelectedResumeId: (id: string | null) => void;
-  addResume: (resumeData: Omit<Resume, 'id' | 'lastUpdated' | 'userId' | 'summary'>) => Promise<string | null>;
+  addResume: (resumeData: Omit<Resume, 'id' | 'lastUpdated' | 'userId' >) => Promise<string | null>;
   updateResume: (id: string, resumeData: Partial<Omit<Resume, 'id' | 'userId'>>) => Promise<void>;
   deleteResume: (id: string) => Promise<void>;
   loadingResumes: boolean;
@@ -65,7 +66,10 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
           setSelectedResume(updatedSelected || null);
         } else if (fetchedResumes.length > 0 && !selectedResume) {
           // Auto-select first resume if none is selected
-          setSelectedResume(fetchedResumes[0]);
+          // Only select if it's not a builder resume or if we enhance selection logic later
+           if (!fetchedResumes[0].templateId) { // Prioritize non-builder resumes for default selection in text editor
+            setSelectedResume(fetchedResumes[0]);
+           }
         }
         setLoadingResumes(false);
       },
@@ -88,18 +92,26 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [resumes]);
 
-  const addResume = async (resumeData: Omit<Resume, 'id' | 'lastUpdated' | 'userId' | 'summary'>): Promise<string | null> => {
+  const addResume = async (resumeData: Omit<Resume, 'id' | 'lastUpdated' | 'userId'>): Promise<string | null> => {
     if (!db || !userId || !appId) {
       toast({ title: "Error", description: "Database not available.", variant: "destructive" });
       return null;
     }
     try {
       const resumesColPath = `artifacts/${appId}/users/${userId}/resumes`;
-      const newResumeRef = await addDoc(collection(db, resumesColPath), {
-        ...resumeData,
+      
+      // Ensure content is an empty string if not provided, especially for builder resumes
+      const dataToSave: Omit<Resume, 'id'> = {
+        name: resumeData.name,
+        content: resumeData.content || '', // Ensure content is at least an empty string
         userId,
         lastUpdated: Timestamp.now().toDate().toISOString(),
-      });
+        summary: resumeData.summary, // Keep existing summary if provided
+        templateId: resumeData.templateId,
+        structuredData: resumeData.structuredData,
+      };
+
+      const newResumeRef = await addDoc(collection(db, resumesColPath), dataToSave);
       toast({ title: "Success", description: "Resume added successfully." });
       return newResumeRef.id;
     } catch (error) {
@@ -116,10 +128,16 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
     }
     try {
       const resumeDocPath = `artifacts/${appId}/users/${userId}/resumes/${id}`;
-      await updateDoc(doc(db, resumeDocPath), {
+      
+      const dataToUpdate = {
         ...resumeData,
         lastUpdated: Timestamp.now().toDate().toISOString(),
-      });
+      };
+      // If content is explicitly set to null or undefined by partial update, ensure it's handled
+      // or make sure that updates to structuredData also clear/update content appropriately.
+      // For now, we assume resumeData will provide what's needed.
+
+      await updateDoc(doc(db, resumeDocPath), dataToUpdate);
       toast({ title: "Success", description: "Resume updated successfully." });
     } catch (error) {
       console.error("Error updating resume:", error);
@@ -152,6 +170,10 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   const summarizeResumeContent = async (resumeId: string, resumeText: string) => {
     if (!db || !userId || !appId) {
       toast({ title: "Error", description: "AI service not available.", variant: "destructive" });
+      return;
+    }
+    if (!resumeText.trim()) {
+      toast({ title: "Input Required", description: "Resume content is empty, cannot summarize.", variant: "destructive" });
       return;
     }
     try {

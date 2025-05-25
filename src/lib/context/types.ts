@@ -1,3 +1,4 @@
+
 import type { JOB_PLATFORMS, JOB_STATUSES, EMAIL_TYPES } from "@/constants";
 
 export type JobStatus = typeof JOB_STATUSES[number];
@@ -18,14 +19,73 @@ export interface JobApplication {
   userId: string; // To associate with the user
 }
 
+// Resume Builder Related Types
+export interface PersonalInfo {
+  fullName?: string;
+  jobTitle?: string;
+  email?: string;
+  phone?: string;
+  linkedin?: string;
+  portfolio?: string;
+  address?: string;
+  photoUrl?: string; // URL to an uploaded image
+}
+
+export interface WorkExperienceEntry {
+  id: string;
+  jobTitle?: string;
+  company?: string;
+  location?: string;
+  startDate?: string; // ISO string or "Present"
+  endDate?: string;   // ISO string
+  description?: string; // Markdown or plain text bullet points
+}
+
+export interface EducationEntry {
+  id: string;
+  degree?: string;
+  institution?: string;
+  location?: string;
+  graduationYear?: string; // Or start/end dates
+  description?: string; // GPA, honors, relevant coursework
+}
+
+export interface SkillEntry {
+  id: string;
+  name?: string;
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'; // Optional
+}
+
+export interface CustomSectionEntry {
+  id: string;
+  title?: string;
+  description?: string;
+}
+
+export interface ResumeData {
+  personalInfo?: PersonalInfo;
+  summary?: string; // Professional summary/objective
+  experience?: WorkExperienceEntry[];
+  education?: EducationEntry[];
+  skills?: SkillEntry[];
+  customSections?: CustomSectionEntry[];
+}
+
+export type ResumeTemplateId = 'modern' | 'classic' | 'ivy-league';
+
 export interface Resume {
   id: string;
   name: string;
-  content: string;
+  content: string; // For plain text resumes or as a fallback/export
   lastUpdated: string; // ISO string date
   userId: string; // To associate with the user
-  summary?: string; // AI generated summary
+  summary?: string; // AI generated summary for plain text resumes
+
+  // For resume builder
+  templateId?: ResumeTemplateId;
+  structuredData?: ResumeData; // Holds the structured data for the builder
 }
+
 
 export interface EmailLog {
   id: string;
@@ -40,7 +100,7 @@ export interface EmailLog {
 }
 
 export interface InterviewNote {
-  id: string;
+  id:string;
   jobId: string; // Links to JobApplication
   date: string; // ISO string date
   interviewers?: string[]; // Array of interviewer names
