@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// Removed unused Select import: import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResumeForm } from '@/components/resume-builder/ResumeForm';
 import { ResumePreview } from '@/components/resume-builder/ResumePreview';
 import type { Resume, ResumeData, ResumeTemplateId } from '@/lib/context/types';
@@ -15,6 +15,7 @@ import { useResume } from '@/lib/context/ResumeProvider';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, Eye, Loader2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs for sections
+import { Badge } from '@/components/ui/badge'; // Added Badge import
 
 const initialResumeData: ResumeData = {
   personalInfo: { fullName: '', jobTitle: '', email: '', phone: '', linkedin: '', portfolio: '', address: '' },
@@ -68,11 +69,16 @@ export default function ResumeBuilderPage() {
       if(loadingResumes) {
         // Wait for resumes to load
         const checkInterval = setInterval(() => {
-          if(!loadingResumes) {
+          // Check if loadingResumes has become false by accessing the latest value from useResume()
+          // This requires useResume to be stable or this effect to re-run if loadingResumes changes
+          const currentContext = useResume(); // Assuming useResume() hook gives latest state
+          if(!currentContext.loadingResumes) {
             clearInterval(checkInterval);
             loadExisting();
           }
         }, 100);
+         // Cleanup interval on component unmount or if dependencies change
+        return () => clearInterval(checkInterval);
       } else {
         loadExisting();
       }
@@ -84,7 +90,7 @@ export default function ResumeBuilderPage() {
         setResumeData(initialResumeData);
         setEditingResumeId(null);
     }
-  }, [searchParams, getResumeById, loadingResumes, router, toast]);
+  }, [searchParams, getResumeById, loadingResumes, router, toast, useResume]); // Added useResume to dep array if its return value changes
 
 
   const handleResumeDataChange = useCallback((newDa_ta: ResumeData) => {
