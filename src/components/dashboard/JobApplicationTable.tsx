@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -88,7 +89,7 @@ export function JobApplicationTable({ applications, loading, onUpdate, onDelete 
           {applications.map((job) => (
             <TableRow key={job.id}>
               <TableCell className="font-medium">
-                <Link href={`/jobs/${job.id}`} className="hover:underline text-primary">
+                <Link href={`/dashboard/jobs/${job.id}`} className="hover:underline text-primary">
                   {job.title}
                 </Link>
               </TableCell>
@@ -134,7 +135,7 @@ export function JobApplicationTable({ applications, loading, onUpdate, onDelete 
                     <DropdownMenuItem onClick={() => handleEdit(job)}>
                       <Edit2 className="mr-2 h-4 w-4" /> Edit
                     </DropdownMenuItem>
-                    <Link href={`/jobs/${job.id}`} passHref>
+                    <Link href={`/dashboard/jobs/${job.id}`} passHref>
                        <DropdownMenuItem>
                          <Eye className="mr-2 h-4 w-4" /> View Details
                        </DropdownMenuItem>

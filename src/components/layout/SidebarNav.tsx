@@ -37,11 +37,11 @@ import { useTheme } from '@/context/ThemeProvider'; // Import useTheme
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'; // For theme toggle
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/resumes', label: 'Resumes', icon: FileText },
-  { href: '/keyword-matcher', label: 'Keyword Matcher', icon: Lightbulb },
-  { href: '/cover-letters', label: 'Cover Letters', icon: ClipboardSignature },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/resumes', label: 'Resumes', icon: FileText },
+  { href: '/dashboard/keyword-matcher', label: 'Keyword Matcher', icon: Lightbulb },
+  { href: '/dashboard/cover-letters', label: 'Cover Letters', icon: ClipboardSignature },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 export function SidebarNav() {
@@ -99,7 +99,7 @@ export function SidebarNav() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4 flex flex-col items-center group-data-[collapsible=icon]:items-center">
-        <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+        <Link href="/dashboard" className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
           <Briefcase className="w-8 h-8 text-primary" />
           <span className="font-semibold text-xl group-data-[collapsible=icon]:hidden">CareerCompass</span>
         </Link>
@@ -133,7 +133,7 @@ export function SidebarNav() {
                   <SidebarMenuButton
                     variant="default"
                     size="default"
-                    isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
+                    isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
                     tooltip={{children: item.label}}
                     className="justify-start"
                   >
