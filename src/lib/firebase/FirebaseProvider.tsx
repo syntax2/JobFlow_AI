@@ -1,5 +1,3 @@
-// src/lib/context/firebase/FirebaseProvider.tsx
-
 "use client";
 
 import type { FirebaseApp } from "firebase/app";
@@ -24,15 +22,7 @@ import React, {
 import { APP_ID, INITIAL_AUTH_TOKEN } from "@/constants"; // APP_ID and INITIAL_AUTH_TOKEN from your constants
 import { GlobeLock } from "lucide-react"; // For loading state
 
-// Firebase configuration:
-// In Firebase Studio and deployed Firebase Hosting environments,
-// a global variable `__firebase_config` is typically injected by the platform.
-// This provider will try to use that global configuration first.
-// If `__firebase_config` is not found (e.g., in local development outside Studio),
-// it falls back to environment variables (NEXT_PUBLIC_FIREBASE_*).
-// It's crucial that for production, the configuration is securely provided by the environment.
-// We have REMOVED hardcoded placeholder values to ensure that configuration MUST come
-// from environment variables or the injected global config for security and correctness.
+// environment variables or the injected global config for security and correctness.
 const firebaseConfig = (globalThis as any).__firebase_config || {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
